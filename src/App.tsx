@@ -1,6 +1,7 @@
 import TaskContainer from "./components/TaskContainer"
 import { Task, Priority, Status } from "./types/task"
 import { useState } from "react"
+import { invoke } from "@tauri-apps/api/core"
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -13,6 +14,7 @@ export default function App() {
       status: Status.Todo
     }
     setTasks([...tasks, newTask])
+    invoke("save_tasks", { tasks: tasks })
   }
 
   function removeTask(taskToRemove: Task) {
