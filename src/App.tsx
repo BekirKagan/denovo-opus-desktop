@@ -1,10 +1,15 @@
 import TaskContainer from "./components/TaskContainer"
 import { Task, Priority, Status } from "./types/task"
-import { useState } from "react"
+import { convertTasksForRust } from "./types/utils"
+import { useEffect, useState } from "react"
 import { invoke } from "@tauri-apps/api/core"
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([])
+
+  useEffect(() => {
+    invoke("save_tasks", { tasks: convertTasksForRust(tasks) })
+  }, [tasks])
 
   function addTask() {
     const newTask: Task = {
@@ -14,7 +19,6 @@ export default function App() {
       status: Status.Todo
     }
     setTasks([...tasks, newTask])
-    invoke("save_tasks", { tasks: tasks })
   }
 
   function removeTask(taskToRemove: Task) {
