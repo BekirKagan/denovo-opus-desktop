@@ -1,3 +1,6 @@
+use std::fs;
+use std::path::PathBuf;
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 enum Priority {
     Negligible,
@@ -22,11 +25,36 @@ struct Task {
     status: Status,
 }
 
+fn get_save_path() -> PathBuf {
+    if let Some(local_data_dir) = dirs_next::data_local_dir() {
+        let path = local_data_dir.join("DenovoOpus").join("tasks.json");
+        path
+    } else {
+        // TODO: Add default paths for Linux and MacOS too.
+        #[cfg(target_os = "windows")]
+        let path = PathBuf::from("C:/DenovoOpus/tasks.json");
+        path
+    }
+}
+
 #[tauri::command]
 fn save_tasks(tasks: Vec<Task>) {
-    for task in tasks {
-        println!("{:?}", task);
-    }
+    // TODO: Create an error log file and write the errors in there.
+    // Also inform the user where the log files have been placed.
+    // We are panicking here for now.
+
+    let save_file_path = get_save_path();
+    let save_dir = save_file_path.parent().unwrap();
+    fs::create_dir_all(save_dir).expect("Could not create save directory.");
+
+    let file = fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open(save_file_path.as_path())
+        .expect("Could not create save file.");
+
+    serde_json::to_writer_pretty(file, &tasks).expect("Could not save tasks.");
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
