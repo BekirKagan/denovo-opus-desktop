@@ -1,15 +1,36 @@
 import TaskContainer from "./components/TaskContainer"
 import { Task, Priority, Status } from "./types/task"
-import { convertTasksForRust } from "./types/utils"
 import { useEffect, useState } from "react"
-import { invoke } from "@tauri-apps/api/core"
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const tasksStorage: string = "tasks"
 
   useEffect(() => {
-    invoke("save_tasks", { tasks: convertTasksForRust(tasks) })
+    loadTasks()
+  }, [])
+
+  useEffect(() => {
+    saveTasks()
   }, [tasks])
+
+  function loadTasks() {
+    const tasks_json = localStorage.getItem(tasksStorage)
+    if (tasks_json !== null) {
+      const tasks: Task[] = JSON.parse(tasks_json)
+      setTasks([...tasks])
+    }
+    setLoading(false)
+  }
+
+  function saveTasks() {
+    if (loading)
+      return
+    const tasks_json = JSON.stringify(tasks)
+    console.log(tasks_json)
+    localStorage.setItem(tasksStorage, tasks_json)
+  }
 
   function addTask() {
     const newTask: Task = {
